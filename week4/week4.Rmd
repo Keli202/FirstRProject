@@ -1,0 +1,160 @@
+---
+title: "Assignment 4"
+author: "Keli Niu"
+date: "2024-10-09"
+output: html_document # you can change to other output format if you want
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Tidy data and iteration
+
+
+## 1.1 (Q1)   
+
+```{r 1.1Q1, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(purrr)
+```
+**Since this function uses the map_dbl function, the "purrr" library should be loaded.**
+
+## 1.1 (Q2)  
+```{r 1.1Q2, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+impute_by_median<-function(x){
+  median<-median(x,na.rm = TRUE)
+  impute_f<-function(z){
+    if(is.na(z)){
+      return(median)
+  
+    }else{
+      return(z)
+    }
+  }
+  return(map_dbl(x,impute_f))
+}
+
+v <- c(1, 2, NA, 4)
+impute_by_median(v)
+```
+
+## 1.1 (Q3)
+```{r 1.1Q3, message=FALSE}
+
+
+x<-seq(0,10,by=0.1)
+
+y<-5*x+1
+
+df_xy<-data.frame(x,y)
+
+head(df_xy,5)
+```
+
+## 1.1 (Q4)
+```{r 1.1Q4, message=FALSE}
+
+sometimes_missing<-function(index,value){
+  if(index%%5==0){
+    return(NA)
+  }else{
+    return(value)
+  }
+}
+
+sometimes_missing(14,25)
+
+sometimes_missing(15,25)
+
+df_xy_missing<-df_xy%>%
+  mutate(y=map2_dbl(row_number(),y,sometimes_missing))
+         
+df_xy_missing%>%head(10)
+```
+
+
+## 1.1 (Q5)
+```{r 1.1Q5, message=FALSE}
+
+df_xy_imputed<-df_xy_missing%>%
+  mutate(y=impute_by_median(y))
+
+head(df_xy_imputed)
+
+```
+
+## 1.2 
+```{r 1.2, message=FALSE}
+library(readxl)
+library(readxl) # load the readxl library
+folder_path <- "./"
+#folder_path<-"C:/Users/" # set this to the name of the
+# directory containing "HockeyLeague.xlsx"
+file_name<-"HockeyLeague.xlsx" # set the file name
+file_path<-paste(folder_path,file_name,sep="") # create the file_path
+wins_data_frame<-read_excel(file_path,sheet="Wins") 
+wins_data_frame %>%
+ select(1:5)%>%
+ head(3)
+
+```
+
+## 1.2 (Q1)
+```{r 1.2Q1, message=FALSE}
+
+wins_tidy<-wins_data_frame%>%
+  rename(Team=...1)
+wins_tidy<-wins_tidy%>%
+  pivot_longer(cols=-Team,names_to='Year',values_to='WinTotal')
+wins_tidy<-wins_tidy%>%  
+  separate(col=WinTotal,into = c("Wins", "Total"), sep = " of ")
+  
+wins_tidy <- wins_tidy %>%
+  mutate(
+    Year = as.integer(Year),  
+    Wins = as.integer(Wins),  
+    Total = as.integer(Total) 
+  )
+head(wins_tidy, 5)
+
+```
+
+## 1.2 (Q2)
+```{r 1.2Q2, message=FALSE}
+losses_data_frame<-read_excel(file_path,sheet="Losses") 
+
+losses_tidy <- losses_data_frame %>%
+  rename(Team = ...1)
+
+losses_tidy <- losses_tidy %>%
+  pivot_longer(cols = -Team,  names_to = "Year",  values_to = "Results")
+
+losses_tidy <- losses_tidy %>%
+  separate(col = Results, into = c("Losses", "Total"),  sep = " of ")
+
+losses_tidy <- losses_tidy %>%
+  mutate(Year = as.integer(Year),  Losses = as.integer(Losses),  Total = as.integer(Total))
+
+head(losses_tidy, 5)
+
+```
+
+....
+
+# 2. Random experiments, events and sample spaces, and the set theory
+
+....
+
+# 3. Probability theory
+
+## 3 (Q1)
+
+## 3 (Q2)
+
+.....
+
+
+
