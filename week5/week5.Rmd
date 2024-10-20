@@ -834,6 +834,7 @@ all.equal(my_quantile_output, inbuilt_quantile_output)
 ```
 
 ## 3.2 (Q4)
+![solution](/Users/niukeli/Desktop/FirstRProject/week5/WechatIMG851.jpeg)
 ```{r 3.2Q4, message=FALSE}
 
 ```
