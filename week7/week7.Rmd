@@ -1,0 +1,459 @@
+---
+title: "Assignment 6"
+author: "Keli Niu"
+date: "2024-10-28"
+output: html_document # you can change to other output format if you want
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. The Gaussian distribution
+
+
+## 1 (Q1)   
+
+```{r 1Q1, message=FALSE}
+library(tidyverse)
+
+X_samples<-seq(-4,6,length.out=100)
+X_samples
+density1<-dnorm(X_samples, mean=1,sd=1)
+density2<-dnorm(X_samples, mean=1,sd=sqrt(2))
+density3<-dnorm(X_samples, mean=1,sd=sqrt(3))
+
+df<-data.frame(x=X_samples, density1= density1, density2 = density2, density3 = density3)
+
+df_long <- df %>% 
+  pivot_longer(cols = starts_with("density"), names_to = "Variance", values_to = "Density")%>%
+    mutate(Variance = case_when(Variance == "density1" ~ "1",Variance == "density2" ~ "2",Variance == "density3" ~ "3"))
+
+
+ggplot(df_long, aes(x = x, y = Density, color = Variance,linetype=Variance)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Probability Density Function of Gaussian Distributions",
+       x = "x",
+       y = "Density")
+
+
+```  
+
+
+
+## 1 (Q2)   
+```{r 1Q2, message=FALSE}
+x_values<-X_samples
+
+cdf1 <- pnorm(x_values, mean = 1, sd = 1)
+cdf2 <- pnorm(x_values, mean = 1, sd = sqrt(2))
+cdf3 <- pnorm(x_values, mean = 1, sd = sqrt(3))
+
+
+df_cdf <- data.frame(
+  x = x_values,
+  cdf1 = cdf1,
+  cdf2 = cdf2,
+  cdf3 = cdf3
+)
+
+
+df_cdf_long <- df_cdf %>% pivot_longer(cols = starts_with("cdf"), names_to = "Variance", values_to = "CDF")%>%
+    mutate(Variance = case_when(Variance == "cdf1" ~ "1",Variance == "cdf2" ~ "2",Variance == "cdf3" ~ "3"))
+
+ggplot(df_cdf_long, aes(x = x, y = CDF, color = Variance,linetype=Variance)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Cumulative Distribution Function of Gaussian Distributions",
+       x = "x",
+       y = "CDF")
+
+
+```  
+
+## 1 (Q3)   
+```{r 1Q3, message=FALSE}
+xQ_values<-seq(0,1,length.out=100)
+
+quantile1 <- qnorm(xQ_values, mean = 1, sd = 1)
+quantile2 <- qnorm(xQ_values, mean = 1, sd = sqrt(2))
+quantile3 <- qnorm(xQ_values, mean = 1, sd = sqrt(3))
+
+
+df_quantile <- data.frame(
+  x = xQ_values,
+  quantile1 = quantile1,
+  quantile2 = quantile2,
+  quantile3 = quantile3
+)
+
+
+df_quantile_long <- df_quantile %>% pivot_longer(cols = starts_with("quantile"), names_to = "Variance", values_to = "Quantile")
+
+ggplot(df_quantile_long, aes(x = x, y = Quantile, color = Variance,linetype=Variance)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Quantile Function of Gaussian Distributions",
+       x = "x",
+       y = "Quantile")
+
+
+```  
+
+#### The quantile function is the inverse of the cumulative distribution function, mapping a probability to the corresponding value of a random variable.
+
+## 1 (Q4)   
+```{r 1Q4, message=FALSE}
+set.seed(0)
+n<-100
+
+standardGaussianSample<- rnorm(n, mean = 0, sd = 1)
+
+standardGaussianSample
+```
+
+## 1 (Q5)   
+```{r 1Q5, message=FALSE}
+
+beta<-1
+alpha<-sqrt(3)
+
+mean1Var3GaussianSampleA <- alpha * standardGaussianSample + beta
+mean1Var3GaussianSampleA
+
+```
+
+## 1 (Q6)   
+```{r 1Q6, message=FALSE}
+set.seed(0)
+n <- 100
+mean1Var3GaussianSampleB <- rnorm(n, mean = 1, sd = sqrt(3))
+
+
+mean1Var3GaussianSampleB
+
+are_same <- identical(mean1Var3GaussianSampleA, mean1Var3GaussianSampleB)
+print(are_same)
+```
+
+## 1 (Q7)   
+```{r 1Q7, message=FALSE}
+
+
+
+
+x_values <- seq(-4, 6, length.out = 100)
+
+
+y_values <- dnorm(x_values, mean = 1, sd = sqrt(3))
+
+
+population_density_df <- data.frame(x = x_values, y = y_values)
+
+
+ggplot() +
+  geom_density(aes(x = mean1Var3GaussianSampleA, color = "Sample kernel density", linetype = "Sample kernel density")) +
+  
+ 
+  geom_line(data = population_density_df, aes(x = x, y = y, color = "Population density", linetype = "Population density")) +
+  
+  geom_vline(aes(xintercept = mean(mean1Var3GaussianSampleA), color = "Sample mean", linetype = "Sample mean")) +
+  
+  geom_vline(aes(xintercept = 1, color = "Population mean", linetype = "Population mean")) +
+  
+  theme_bw() +
+  labs(title = "Sample Density vs Population Density",
+       x = "Value",
+       y = "Density") +
+  
+  
+  scale_color_manual(name = "Legend",
+                     values = c("Population density" = "red",
+                                "Population mean" = "green",
+                                "Sample kernel density" = "blue",
+                                "Sample mean" = "purple")) +
+  scale_linetype_manual(name = "Legend",
+                        values = c("Population density" = "solid",
+                                   "Population mean" = "solid",
+                                   "Sample kernel density" = "dashed",
+                                   "Sample mean" = "dashed"))
+
+
+```
+
+## 1 (Q8)   
+```{r 1Q8, message=FALSE}
+
+
+```
+
+
+
+
+
+# 2. Location estimators with Gaussian data 
+
+## 2 (Q1)   
+```{r 2Q1, message=FALSE}
+
+
+```
+
+## 2 (Q2)   
+```{r 2Q2, message=FALSE}
+
+
+set.seed(0)
+
+num_trials_per_sample_size <- 1000
+min_sample_size <- 30
+max_sample_size <- 500
+sample_size_inc <- 5
+mu_0 <- 1
+sigma_0 <- 3
+
+simulation_df <- crossing(trial = seq(num_trials_per_sample_size),
+                          sample_size = seq(min_sample_size, max_sample_size, sample_size_inc)) %>%
+  mutate(simulation = pmap(.l = list(trial, sample_size),
+                           .f = ~rnorm(.y, mean = mu_0, sd = sigma_0))) %>%
+  mutate(sample_md = map_dbl(.x = simulation, .f = median)) %>%
+  mutate(sample_mn = map_dbl(.x = simulation, .f = mean)) %>%
+  group_by(sample_size) %>%
+  summarise(msq_error_md = mean((sample_md - mu_0)^2),
+            msq_error_mn = mean((sample_mn - mu_0)^2))
+
+print(simulation_df)
+
+
+ggplot(simulation_df, aes(x = sample_size)) +
+  
+  geom_smooth(aes(y = msq_error_md,color = "Median", linetype = "Median"), se=TRUE) +
+  geom_smooth(aes(y = msq_error_mn, color = "Mean", linetype = "Mean"),se=TRUE) +
+  theme_bw() +
+  labs(title = "Mean Squared Error of Sample Mean vs. Sample Median",
+       x = "Sample size",
+       y = "Mean square error") +
+  scale_color_manual(name = "Estimator",
+                     values = c("Mean" = "red", "Median" = "cyan4")) +
+  scale_linetype_manual(name = "Estimator",
+                        values = c("Mean" = "solid", "Median" = "dashed")) +
+  theme(legend.position = "right")
+
+```
+
+
+# 3.  (**) The law of large numbers and Hoeffding’s inequality
+
+## 3 (Q1)
+```{r 3Q1, message=FALSE}
+
+
+```
+
+# 4. Maximum likelihood estimates 
+
+## 4.1 Maximum likelihood estimates for Red tailed hawks
+
+## 4.1 (Q1)
+```{r 4.1Q1, message=FALSE}
+library(tidyverse)
+library(Stat2Data)
+data("Hawks")
+
+
+RedTailedDf <- Hawks %>%
+  filter(Species == "RT") %>% 
+  select(Weight, Tail, Wing)          
+
+
+print(nrow(RedTailedDf)) 
+
+print(head(RedTailedDf, 5))
+
+```
+
+## 4.1 (Q2)
+```{r 4.1Q2, message=FALSE}
+
+n <- nrow(RedTailedDf)  
+
+
+mu_hat_MLE <- mean(RedTailedDf$Tail)
+
+sigma_hat_squared_MLE <- sum((RedTailedDf$Tail - mu_hat_MLE)^2) / n
+
+print(paste("Maximum Likelihood Estimate for Mean (μ̂ MLE):", mu_hat_MLE))
+print(paste("Maximum Likelihood Estimate for Variance (σ̂² MLE):", sigma_hat_squared_MLE))
+```
+
+## 4.1 (Q3)
+```{r 4.1Q3, message=FALSE}
+sigma_hat_MLE <- sqrt(sigma_hat_squared_MLE)
+
+ggplot() +
+  geom_density(data = RedTailedDf, aes(x = Tail, color = "Kernel density")) +
+  
+  stat_function(fun = dnorm, args = list(mean = mu_hat_MLE, sd = sigma_hat_MLE), 
+                aes(color = "MLE density")) +
+  
+
+  theme_bw() +
+  labs(title = "Comparison of Kernel Density Estimate and MLE Gaussian Density",
+       x = "Length",
+       y = "Tail length (mm)") +
+  
+  scale_color_manual(values = c("Kernel density" = "blue", "MLE density" = "red")) 
+
+```
+
+## 4.2 Unbiased estimation of the population variance
+
+## 4.2 (Q1)
+```{r 4.2Q1, message=FALSE}
+set.seed(0)
+mu_0 <- 1         
+sigma_0 <- 3      
+num_trials <- 1000 
+sample_sizes <- seq(5, 100, by = 5) 
+
+bias_results <- data.frame(sample_size = integer(),
+                           bias_mle = numeric(),
+                           bias_unbiased = numeric())
+
+for (n in sample_sizes) {
+  V_mle_list <- numeric(num_trials)
+  V_unbiased_list <- numeric(num_trials)
+  
+  for (i in 1:num_trials) {
+    sample_data <- rnorm(n, mean = mu_0, sd = sigma_0)
+    
+    sample_mean <- mean(sample_data)
+    
+    V_mle <- sum((sample_data - sample_mean)^2) / n
+    V_mle_list[i] <- V_mle
+    
+    V_unbiased <- sum((sample_data - sample_mean)^2) / (n - 1)
+    V_unbiased_list[i] <- V_unbiased
+  }
+  
+  bias_mle <- mean(V_mle_list) - sigma_0^2
+  bias_unbiased <- mean(V_unbiased_list) - sigma_0^2
+  
+  bias_results <- rbind(bias_results, data.frame(sample_size = n,
+                                                 bias_mle = bias_mle,
+                                                 bias_unbiased = bias_unbiased))
+}
+
+ggplot(bias_results, aes(x = sample_size)) +
+  geom_line(aes(y = bias_mle, color = "MLE Bias"), linetype = "solid") +
+  geom_line(aes(y = bias_unbiased, color = "Unbiased Bias"), linetype = "dashed") +
+  theme_bw() +
+  labs(title = "Bias of MLE Variance Estimate vs. Unbiased Estimate",
+       x = "Sample Size",
+       y = "Bias") +
+  scale_color_manual(name = "Estimator",
+                     values = c("MLE Bias" = "red", "Unbiased Bias" = "blue")) 
+
+```
+
+## 4.2 (Q2)
+```{r 4.2Q2, message=FALSE}
+
+
+```
+
+## 4.2 (Q3)
+```{r 4.2Q3, message=FALSE}
+
+
+```
+
+## 4.3 Maximum likelihood estimation with the Poisson distribution
+
+## 4.3 (Q1)
+```{r 4.3Q1, message=FALSE}
+
+
+```
+## 4.3 (Q2)
+```{r 4.3Q2, message=FALSE}
+
+
+```
+## 4.3 (Q3)
+```{r 4.3Q3, message=FALSE}
+
+
+```
+## 4.3 (Q4)
+```{r 4.3Q4, message=FALSE}
+
+
+```
+## 4.3 (Q5)
+```{r 4.3Q5, message=FALSE}
+
+
+```
+## 4.4 Maximum likelihood estimation for the exponential distribution
+
+## 4.4 (Q1)
+```{r 4.4Q1, message=FALSE}
+
+
+```
+
+## 4.4 (Q2)
+```{r 4.4Q2, message=FALSE}
+
+
+```
+
+## 4.4 (Q3)
+```{r 4.4Q3, message=FALSE}
+
+
+```
+
+## 4.4 (Q4)
+```{r 4.4Q4, message=FALSE}
+
+
+```
+
+# 5. Confidence intervals 
+
+## 5.1 Student’s t-confidence intervals 
+
+## 5.1 (Q1)
+```{r 5.1Q1, message=FALSE}
+
+
+```
+
+## 5.1 (Q2)
+```{r 5.1Q2, message=FALSE}
+
+
+```
+
+## 5.1 (Q3)
+```{r 5.1Q3, message=FALSE}
+
+
+```
+
+## 5.2 Investigating coverage for Student’s t intervals
+
+## 5.2 (Q1)
+```{r 5.2Q1, message=FALSE}
+
+
+```
+
+## 5.2 (Q2)
+```{r 5.2Q2, message=FALSE}
+
+
+```
