@@ -359,8 +359,51 @@ ggplot(bias_results, aes(x = sample_size)) +
 
 ## 4.2 (Q2)
 ```{r 4.2Q2, message=FALSE}
+set.seed(0)
+mu_0 <- 1        
+sigma_0 <- 3      
+num_trials <- 1000 
+sample_sizes <- seq(5, 100, by = 5) 
 
 
+sqrt_bias_results <- data.frame(sample_size = integer(),
+                                bias_sqrt_unbiased = numeric())
+
+
+for (n in sample_sizes) {
+ 
+  sqrt_V_unbiased_list <- numeric(num_trials)
+  
+  for (i in 1:num_trials) {
+    
+    sample_data <- rnorm(n, mean = mu_0, sd = sigma_0)
+    
+    
+    sample_mean <- mean(sample_data)
+    
+   
+    V_unbiased <- sum((sample_data - sample_mean)^2) / (n - 1)
+    
+    
+    sqrt_V_unbiased <- sqrt(V_unbiased)
+    sqrt_V_unbiased_list[i] <- sqrt_V_unbiased
+  }
+  
+  bias_sqrt_unbiased <- mean(sqrt_V_unbiased_list) - sigma_0
+  
+  sqrt_bias_results <- rbind(sqrt_bias_results, data.frame(sample_size = n,
+                                                           bias_sqrt_unbiased = bias_sqrt_unbiased))
+}
+
+ggplot(sqrt_bias_results, aes(x = sample_size, y = bias_sqrt_unbiased)) +
+  geom_line(aes(color="Bias")) +
+  theme_bw() +
+  labs(title = "Bias of sqrt(V_U) as an Estimator for Population Standard Deviation",
+       x = "Sample Size",
+       y = "Bias of sqrt(V_U)")+
+  scale_color_manual(name = "Estimator",
+                     values = c("Bias" = "blue")) 
+# 虽然VU对整体方差sigma方是无偏的，但其平方根是非线性的，根据詹森不等式得到其在较低样本时会低于整体标准差
 ```
 
 ## 4.2 (Q3)
@@ -372,23 +415,127 @@ ggplot(bias_results, aes(x = sample_size)) +
 ## 4.3 Maximum likelihood estimation with the Poisson distribution
 
 ## 4.3 (Q1)
+
+The likelihood function can be written as:
+
+\[
+l(\lambda) = e^{-n\lambda} \cdot \lambda^{n\bar{X}} \cdot \prod_{i=1}^n \frac{1}{X_i!}
+\]
+
+Taking the natural logarithm of the likelihood function, we obtain the log-likelihood function:
+
+\[
+\log l(\lambda) = \log \left( e^{-n\lambda} \cdot \lambda^{n\bar{X}} \cdot \prod_{i=1}^n \frac{1}{X_i!} \right)
+\]
+
+Using the properties of logarithms (turning multiplication into addition), we can write:
+
+\[
+\log l(\lambda) = -n\lambda + {n\bar{X}} \log \lambda + \sum_{i=1}^n \log \left( \frac{1}{X_i!} \right)
+\]
+
+Since the last term is a constant with respect to \(\lambda\), it can be ignored when differentiating:
+
+\[
+\log l(\lambda) = -n\lambda + {n\bar{X}} \log \lambda + \text{constant}
+\]
+
+Now, to find the maximum likelihood estimate, we take the derivative of the log-likelihood function with respect to \(\lambda\):
+
+\[
+\frac{\partial}{\partial \lambda} \log l(\lambda) = -n + \frac{n\bar{X}}{\lambda}
+\]
+
+To find the maximum likelihood estimate \(\hat{\lambda}\), we set the derivative equal to zero:
+
+\[
+-n + \frac{n\bar{X}}{\lambda} = 0
+\]
+
+Solving this equation gives:
+
+\[
+\hat{\lambda} = {\bar{X}}
+\]
+
+
+
 ```{r 4.3Q1, message=FALSE}
 
 
 ```
 ## 4.3 (Q2)
+To verify whether \(\lambda = \bar{X}\) is a maximum of the log-likelihood function, we can take the second derivative of the log-likelihood function and check its sign.
+
+Taking the derivative of the log-likelihood function \(\log l(\lambda)\) again with respect to \(\lambda\), we obtain the second derivative:
+
+\[
+\frac{\partial^2}{\partial \lambda^2} \log l(\lambda) = -\frac{n\bar{X}}{\lambda^2}
+\]
+
+Since \(\lambda > 0\) and \(n > 0\), it can be seen that:
+
+\[
+\frac{\partial^2}{\partial \lambda^2} \log l(\lambda) < 0
+\]
+
+This indicates that the log-likelihood function is concave down at \(\lambda = \bar{X}\), meaning that it reaches a maximum at this point.
+
 ```{r 4.3Q2, message=FALSE}
 
 
 ```
 ## 4.3 (Q3)
 ```{r 4.3Q3, message=FALSE}
+set.seed(0)  
+lambda_0 <- 0.5  
+sample_sizes <- seq(10, 200, by = 10)  
+num_trials <- 1000 
 
+
+mse_results <- data.frame(sample_size = integer(),
+                          mse = numeric())
+
+
+for (n in sample_sizes) {
+  lambda_mle_list <- numeric(num_trials)
+  
+  for (i in 1:num_trials) {
+    
+    sample_data <- rpois(n, lambda = lambda_0)
+    
+    # 计算最大似然估计 (MLE) = 样本均值
+    lambda_mle <- mean(sample_data)
+    lambda_mle_list[i] <- lambda_mle
+  }
+  
+  # 计算均方误差 (MSE)
+  mse <- mean((lambda_mle_list - lambda_0)^2)
+  
+  mse_results <- rbind(mse_results, data.frame(sample_size = n, mse = mse))
+}
+
+ggplot(mse_results, aes(x = sample_size, y = mse)) +
+  geom_line(color = "blue") +
+  theme_minimal() +
+  labs(title = "Mean Squared Error of MLE for Poisson Parameter",
+       x = "Sample Size",
+       y = "Mean Squared Error (MSE)") +
+  theme(legend.position = "none")
 
 ```
 ## 4.3 (Q4)
 ```{r 4.3Q4, message=FALSE}
+data_file <- "VonBortkiewicz.csv"  
+horse_data <- read.csv(data_file)
 
+lambda_mle <- mean(horse_data$fatalities)
+
+print(paste("The maximum likelihood estimate for lambda (MLE) is:", lambda_mle))
+
+prob_no_fatalities <- dpois(0, lambda = lambda_mle)
+
+print(paste("The estimated probability that a cavalry corps has no fatalities in a single year is:", prob_no_fatalities))
 
 ```
 ## 4.3 (Q5)
@@ -399,6 +546,50 @@ ggplot(bias_results, aes(x = sample_size)) +
 ## 4.4 Maximum likelihood estimation for the exponential distribution
 
 ## 4.4 (Q1)
+The likelihood function is the product of the probability density for all sample points:
+
+\[
+l(\lambda) = \prod_{i=1}^n p_\lambda(X_i) = \prod_{i=1}^n \lambda e^{-\lambda X_i}
+\]
+
+Expanding this, we get:
+
+\[
+l(\lambda) = \lambda^n e^{-\lambda \sum_{i=1}^n X_i}
+\]
+
+To simplify the maximization process, we take the natural logarithm of the likelihood function to obtain the log-likelihood function:
+
+\[
+\log l(\lambda) = \log(\lambda^n e^{-\lambda \sum_{i=1}^n X_i})
+\]
+
+Using the properties of logarithms, this can be written as:
+
+\[
+\log l(\lambda) = n \log \lambda - \lambda \sum_{i=1}^n X_i
+\]
+
+To find the maximum likelihood estimate, we differentiate the log-likelihood function with respect to \(\lambda\):
+
+\[
+\frac{\partial}{\partial \lambda} \log l(\lambda) = \frac{n}{\lambda} - \sum_{i=1}^n X_i
+\]
+
+
+To find the maximum likelihood estimate \(\hat{\lambda}\), we set the derivative equal to zero:
+
+\[
+\frac{n}{\lambda} - \sum_{i=1}^n X_i = 0
+\]
+
+Solving for \(\lambda\), we get:
+
+\[
+\hat{\lambda} = \frac{n}{\sum_{i=1}^n X_i}= {\frac{1}{\bar{X}}}
+\]
+
+
 ```{r 4.4Q1, message=FALSE}
 
 
@@ -406,12 +597,24 @@ ggplot(bias_results, aes(x = sample_size)) +
 
 ## 4.4 (Q2)
 ```{r 4.4Q2, message=FALSE}
+data_file <- "CustomerPurchase.csv" 
+purchase_data <- read.csv(data_file)
+head(purchase_data)
 
+purchase_data <- purchase_data %>%
+  mutate(time_diffs = lead(Time) - Time)
+
+print(head(purchase_data))
 
 ```
 
 ## 4.4 (Q3)
 ```{r 4.4Q3, message=FALSE}
+
+time_diffs <- na.omit(purchase_data$time_diffs)
+lambda_mle <- 1 / mean(time_diffs)
+print(paste("The maximum likelihood estimate for lambda (MLE) is:", lambda_mle))
+
 
 
 ```
@@ -419,7 +622,10 @@ ggplot(bias_results, aes(x = sample_size)) +
 ## 4.4 (Q4)
 ```{r 4.4Q4, message=FALSE}
 
+prob_exceed_60 <- 1 - pexp(60, rate = lambda_mle)
 
+
+print(paste("The estimated probability that the arrival time exceeds one minute is:", prob_exceed_60))
 ```
 
 # 5. Confidence intervals 
@@ -427,6 +633,41 @@ ggplot(bias_results, aes(x = sample_size)) +
 ## 5.1 Student’s t-confidence intervals 
 
 ## 5.1 (Q1)
+The formula for calculating the confidence interval using Student's t-distribution is as follows:
+
+\[
+\text{Confidence Interval} = \left( \bar{X} - t \cdot \frac{s}{\sqrt{n}}, \; \bar{X} + t \cdot \frac{s}{\sqrt{n}} \right)
+\]
+
+where:
+
+\begin{itemize}
+    \item \(\bar{X}\): Sample mean
+    \item \(s\): Sample standard deviation
+    \item \(n\): Sample size
+    \item \(t\): Critical value from the t-distribution, depending on the significance level \(\alpha\) and degrees of freedom \(n - 1\)
+\end{itemize}
+
+The width of the confidence interval can be expressed as:
+
+\[
+\text{Width} = 2 \cdot t \cdot \frac{s}{\sqrt{n}}
+\]
+
+### Analysis of Influencing Factors
+
+1. **Increase in Sample Mean**
+   - **Effect**: If the sample mean increases, the center of the confidence interval will shift, but the width of the interval will not be affected.
+   - **Reason**: The width of the confidence interval is related to the standard deviation, sample size, and the t-value, but it is independent of the sample mean.
+
+2. **Increase in Sample Standard Deviation**
+   - **Effect**: If the sample standard deviation \(s\) increases, the width of the confidence interval will **increase**.
+   - **Reason**: A larger standard deviation means the data is more dispersed, which implies greater uncertainty about the population mean. Therefore, the confidence interval becomes wider.
+
+3. **Increase in Sample Size**
+   - **Effect**: If the sample size \(n\) increases (keeping the standard deviation constant), the width of the confidence interval will **decrease**.
+   - **Reason**: Increasing the sample size decreases the standard error of the mean \(\frac{s}{\sqrt{n}}\). With a larger sample size, the estimate of the population mean becomes more precise, leading to a narrower confidence interval.
+
 ```{r 5.1Q1, message=FALSE}
 
 
@@ -434,13 +675,46 @@ ggplot(bias_results, aes(x = sample_size)) +
 
 ## 5.1 (Q2)
 ```{r 5.1Q2, message=FALSE}
+red_tailed_weights <- Hawks %>%
+  filter(Species == "RT") %>%
+  select(Weight) %>%
+  drop_na() %>%
+  pull(Weight)
 
+
+alpha <- 0.01  
+sample_size <- length(red_tailed_weights)
+sample_mean <- mean(red_tailed_weights)
+sample_sd <- sd(red_tailed_weights)
+
+t_value <- qt(1 - alpha / 2, df = sample_size - 1)
+
+confidence_interval_l <- sample_mean - t_value * sample_sd / sqrt(sample_size)
+confidence_interval_u <- sample_mean + t_value * sample_sd / sqrt(sample_size)
+confidence_interval <- c(confidence_interval_l, confidence_interval_u)
+
+
+print(confidence_interval)
 
 ```
 
 ## 5.1 (Q3)
 ```{r 5.1Q3, message=FALSE}
+ggplot(data.frame(Weight = red_tailed_weights), aes(x = Weight)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +
+  theme_bw() +
+  labs(title = "Kernel Density Plot of Red-Tailed Hawk Weights",
+       x = "Weight",
+       y = "Density")
 
+
+ggplot(data.frame(Weight = red_tailed_weights), aes(sample = Weight)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_bw() +
+  labs(title = "QQ Plot of Red-Tailed Hawk Weights",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles")
 
 ```
 
@@ -448,12 +722,96 @@ ggplot(bias_results, aes(x = sample_size)) +
 
 ## 5.2 (Q1)
 ```{r 5.2Q1, message=FALSE}
+library(dplyr)
+library(purrr)
+library(ggplot2)
 
+# 置信水平列表
+confidence_levels <- c(0.90, 0.95, 0.99)
+num_trials <- 100000
+sample_size <- 30
+mu_0 <- 1
+sigma_0 <- 3
+
+set.seed(0)
+
+student_t_confidence_interval <- function(sample, confidence_level) {
+  sample <- sample[!is.na(sample)] 
+  n <- length(sample)              
+  mu_est <- mean(sample)          
+  sig_est <- sd(sample)            
+  alpha <- 1 - confidence_level    
+  t <- qt(1 - alpha / 2, df = n - 1) 
+  l <- mu_est - (t / sqrt(n)) * sig_est 
+  u <- mu_est + (t / sqrt(n)) * sig_est 
+  return(c(l, u))
+}
+
+results <- list()
+
+for (confidence_level in confidence_levels) {
+  alpha <- 1 - confidence_level
+  
+  single_coverage_simulation_df <- data.frame(trial = seq(num_trials)) %>%
+    mutate(sample = map(.x = trial, .f = ~rnorm(n = sample_size, mean = mu_0, sd = sigma_0))) %>%
+    mutate(ci_interval = map(.x = sample, .f = ~student_t_confidence_interval(.x, confidence_level))) %>%
+    mutate(cover = map_lgl(.x = ci_interval, .f = ~((min(.x) <= mu_0) & (max(.x) >= mu_0)))) %>%
+    mutate(ci_length = map_dbl(.x = ci_interval, .f = ~ (max(.x) - min(.x))))
+  
+  coverage_probability <- mean(single_coverage_simulation_df$cover)
+  
+  results[[as.character(confidence_level)]] <- coverage_probability
+}
+
+coverage_results_df <- data.frame(
+  Confidence_Level = confidence_levels,
+  Coverage_Probability = unlist(results)
+)
+
+print(coverage_results_df)
+
+ggplot(coverage_results_df, aes(x = Confidence_Level, y = Coverage_Probability)) +
+  geom_line(color = "blue", size = 1.2) +
+  geom_point(color = "red", size = 3) +
+  theme_minimal() +
+  labs(title = "Coverage Probability vs Confidence Level",
+       x = "Confidence Level",
+       y = "Coverage Probability")
 
 ```
 
 ## 5.2 (Q2)
 ```{r 5.2Q2, message=FALSE}
 
+results2 <- list()
+
+for (confidence_level in confidence_levels) {
+  alpha <- 1 - confidence_level
+  
+  single_coverage_simulation_df <- data.frame(trial = seq(num_trials)) %>%
+    
+    mutate(sample = map(.x = trial, .f = ~rnorm(n = sample_size, mean = mu_0, sd = sigma_0))) %>%
+    mutate(ci_interval = map(.x = sample, .f = ~student_t_confidence_interval(.x, confidence_level))) %>%
+    mutate(ci_length = map_dbl(.x = ci_interval, .f = ~ (max(.x) - min(.x))))
+  
+  avg_ci_length <- mean(single_coverage_simulation_df$ci_length)
+  
+  results2[[as.character(confidence_level)]] <- avg_ci_length
+}
+
+ci_length_results_df <- data.frame(
+  Confidence_Level = confidence_levels,
+  Average_CI_Length = unlist(results2)
+)
+
+print(ci_length_results_df)
+
+ggplot(ci_length_results_df, aes(x = Confidence_Level, y = Average_CI_Length)) +
+  geom_line(color = "blue", size = 1.2) +
+  geom_point(color = "red", size = 3) +
+  theme_minimal() +
+  labs(title = "Average CI Length vs Confidence Level",
+       x = "Confidence Level",
+       y = "Average Confidence Interval Length")
 
 ```
